@@ -17,6 +17,9 @@ public:
     void addTag(QString name);
     void addBook(book* _book);
     void clearDir();
+    void openExplorer();
+    void open(QString name);
+    int currentBook;
 
 private:
     QSqlDatabase db;

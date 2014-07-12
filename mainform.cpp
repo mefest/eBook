@@ -73,6 +73,23 @@ void MainForm::on_bt_addBook_clicked()
 void MainForm::on_fileView_doubleClicked(const QModelIndex &index)
 {
     int id=index.model()->index(index.row(),1).data().toInt();
-    qDebug()<<id;
     sql->getFile(id);
+    sql->open(index.model()->index(index.row(),2).data().toString());
+}
+
+void MainForm::on_pushButton_clicked()
+{
+    sql->openExplorer();
+}
+
+void MainForm::on_pushButton_4_clicked()
+{
+    int row= ui->fileView->currentIndex().row();
+    if(row>-1)
+    {
+
+        QString name=ui->fileView->model()->index(row,2).data().toString();
+        sql->getFile(ui->fileView->model()->index(row,1).data().toInt());
+        sql->open(name);
+    }
 }

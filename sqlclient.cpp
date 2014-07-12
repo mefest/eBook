@@ -10,13 +10,13 @@
 
 SqlClient::SqlClient()
 {
+    currentBook=0;
     db =QSqlDatabase::addDatabase( "QMYSQL");
     db.setHostName("127.0.0.1");
     db.setDatabaseName("eBook");
     db.setUserName("root");
     db.setPassword("270391");
     bool ok = db.open();
-    qDebug()<<ok;
     if (!ok)
     {
         QMessageBox::critical(0, db.lastError().driverText(),
@@ -42,30 +42,26 @@ QSqlQueryModel *SqlClient::getFiles(int idBook)
 void SqlClient::getFile(int id)
 {
 
-    clearDir();
-
-    QSqlQueryModel *model = new QSqlQueryModel();
-    model->setQuery("SELECT `data`, `fileName` FROM `data` WHERE `idbook`="+QString::number(id));
-    for(int i=0; i<model->rowCount();++i)
+    if(currentBook!=id)
     {
-        QByteArray buf;
-        QString fileName=model->index(i,1).data().toString();
-        buf= model->index(i,0).data().toByteArray();
-        buf=qUncompress(buf);
-        QFile file;
-        file.setFileName("temp/"+fileName);
-        qDebug()<<file.fileName();
-        file.open(QIODevice::ReadWrite);
-        file.write(buf);
-        file.close();
+        clearDir();
+        currentBook=id;
+
+        QSqlQueryModel *model = new QSqlQueryModel();
+        model->setQuery("SELECT `data`, `fileName` FROM `data` WHERE `idbook`="+QString::number(id));
+        for(int i=0; i<model->rowCount();++i)
+        {
+            QByteArray buf;
+            QString fileName=model->index(i,1).data().toString();
+            buf= model->index(i,0).data().toByteArray();
+            buf=qUncompress(buf);
+            QFile file;
+            file.setFileName("temp/"+fileName);
+            file.open(QIODevice::ReadWrite);
+            file.write(buf);
+            file.close();
+        }
     }
-
-
-    QProcess sub;
-    sub.start("gnome-open temp/");
-    sub.waitForFinished(-1);
-
-
 }
 
 QList<QPair<int, QString> > SqlClient::getTags()
@@ -78,7 +74,6 @@ QList<QPair<int, QString> > SqlClient::getTags()
         QPair<int ,QString> tag(query.value("id").toInt(),query.value("name").toString());
         tagsList.append(tag);
     }
-    qDebug()<<tagsList;
     return tagsList;
 }
 
@@ -96,8 +91,6 @@ void SqlClient::addBook(book *_book)
     int bookId=query.lastInsertId().toInt();
     for (int i=0;i<_book->tags.count();++i)
     {
-        qDebug()<<"INSERT INTO `eBook`.`link` (`idtag`, `idbook`)"
-                  "VALUES ('"+QString::number(_book->tags.at(i))+"', '"+QString::number(bookId)+"')";
         query.exec("INSERT INTO `eBook`.`link` (`idtag`, `idbook`)"
                    "VALUES ('"+QString::number(_book->tags.at(i))+"', '"+QString::number(bookId)+"')");
     }
@@ -119,24 +112,33 @@ void SqlClient::addBook(book *_book)
         query.bindValue(":name",fileInfo.fileName());
         query.bindValue(":data",buf);
         query.exec();
-        qDebug()<<query.lastError();
     }
 }
 
 void SqlClient::clearDir()
 {
-    qDebug()<<"clearDir";
     QDir dir;
     dir.setCurrent("temp/");
     QStringList fileLst=dir.entryList(QDir::NoDotAndDotDot|QDir::Files);
     for(int i=0; i<fileLst.count();++i)
     {
-        qDebug()<<fileLst[i];
         QFile file;
         file.setFileName(fileLst[i]);
         file.remove();
-        qDebug()<<QFile(fileLst[i]).errorString();
-
     }
     dir.setCurrent("..");
+}
+
+void SqlClient::openExplorer()
+{
+    QProcess sub;
+    sub.start("gnome-open temp/");
+    sub.waitForFinished(-1);
+}
+
+void SqlClient::open(QString name)
+{
+    QProcess sub;
+    sub.start("gnome-open temp/"+name);
+    sub.waitForFinished(-1);
 }

@@ -31,6 +31,10 @@ private slots:
 
     void on_fileView_doubleClicked(const QModelIndex &index);
 
+    void on_pushButton_clicked();
+
+    void on_pushButton_4_clicked();
+
 private:
     Ui::MainForm *ui;
     AddBook *addBookForm;
