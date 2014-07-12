@@ -12,10 +12,10 @@ MainForm::MainForm(QWidget *parent) :
 
 
 
-    SqlClient sql;
-    sql.getBooks();
-    ui->bookView->setModel(sql.getBooks());
+    sql=new SqlClient();
+    ui->bookView->setModel(sql->getBooks());
     ui->bookView->hideColumn(0);
+
 }
 
 MainForm::~MainForm()
@@ -33,6 +33,10 @@ void MainForm::on_bookView_pressed(const QModelIndex &index)
 void MainForm::on_bookView_clicked(const QModelIndex &index)
 {
     ui->bookView->selectRow(index.row());
+    int id=index.model()->index(index.row(),0).data().toInt();
+    ui->fileView->setModel(sql->getFiles(id));
+    ui->fileView->hideColumn(0);
+    ui->fileView->hideColumn(1);
 }
 
 void MainForm::accept()
@@ -51,13 +55,24 @@ void MainForm::addBook(book *_newBook)
 {
     newBook=_newBook;
     qDebug()<<newBook->author;
+    sql->addBook(_newBook);
+    ui->bookView->model()->deleteLater();
+    ui->bookView->setModel(sql->getBooks());
+
 }
 void MainForm::on_bt_addBook_clicked()
 {
-    addBookForm= new AddBook(this);
+    addBookForm= new AddBook(sql,this);
     connect(addBookForm,SIGNAL(accepted()),this,SLOT(accept()));
     connect(addBookForm,SIGNAL(newBook(book*)),this,SLOT(addBook(book*)));
     connect(addBookForm,SIGNAL(rejected()),this,SLOT(cancelAddBook()));
     addBookForm->show();
 }
 
+
+void MainForm::on_fileView_doubleClicked(const QModelIndex &index)
+{
+    int id=index.model()->index(index.row(),1).data().toInt();
+    qDebug()<<id;
+    sql->getFile(id);
+}

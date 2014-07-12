@@ -5,7 +5,7 @@
 struct book{
     QString author;
     QString theme;
-    QString tags;
+    QList<int> tags;
     QStringList files;
 };
 

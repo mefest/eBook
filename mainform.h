@@ -29,10 +29,13 @@ private slots:
     void cancelAddBook();
     void addBook(book* _newBook);
 
+    void on_fileView_doubleClicked(const QModelIndex &index);
+
 private:
     Ui::MainForm *ui;
     AddBook *addBookForm;
     book *newBook;
+    SqlClient *sql;
 };
 
 #endif // MAINFORM_H

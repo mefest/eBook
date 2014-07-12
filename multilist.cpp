@@ -1,6 +1,6 @@
 #include "multilist.h"
 
-MultiListWidget::MultiListWidget()
+MultiListWidget::MultiListWidget(QWidget *parent)
     : mDisplayRectDelta(4, 1, -25, 0)
 {
     setStyleSheet("QComboBox { combobox-popup: 1px }");

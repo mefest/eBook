@@ -16,13 +16,16 @@ SOURCES += main.cpp\
         mainform.cpp \
     sqlclient.cpp \
     addbook.cpp \
-    multilist.cpp
+    multilist.cpp \
+    addtag.cpp
 
 HEADERS  += mainform.h \
     sqlclient.h \
     addbook.h \
     book.h \
-    multilist.h
+    multilist.h \
+    addtag.h
 
 FORMS    += mainform.ui \
-    addbook.ui
+    addbook.ui \
+    addtag.ui
