@@ -35,11 +35,14 @@ private slots:
 
     void on_pushButton_4_clicked();
 
+    void on_bt_find_clicked();
+
 private:
     Ui::MainForm *ui;
     AddBook *addBookForm;
     book *newBook;
     SqlClient *sql;
+    QList< QPair<int,QString> > _tags;
 };
 
 #endif // MAINFORM_H

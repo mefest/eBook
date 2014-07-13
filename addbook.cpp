@@ -14,7 +14,6 @@ AddBook::AddBook(SqlClient *sql, QWidget *parent) :
     winTag=new AddTag(sql,this);
     connect(winTag,SIGNAL(addedTag()),this,SLOT(tagsChanged()));
     ui->file_tbl->setColumnWidth(0,ui->file_tbl->width()*3);
-
     _tags= sql->getTags();
     for (int i=0; i<_tags.count();++i)
     {
@@ -60,7 +59,6 @@ void AddBook::on_buttonBox_accepted()
                                     QMessageBox::Ok);
        return;
     }
-
     _book=new book;
     _book->author=ui->ln_author->text();
     _book->theme=ui->ln_theme->text();
@@ -80,7 +78,6 @@ void AddBook::on_buttonBox_accepted()
 
 void AddBook::on_pushButton_3_clicked()
 {
-
     winTag->show();
 }
 

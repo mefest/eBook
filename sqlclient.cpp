@@ -35,7 +35,30 @@ QSqlQueryModel *SqlClient::getFiles(int idBook)
 {
     //    clearDir();
     QSqlQueryModel *model = new QSqlQueryModel();
-    model->setQuery("SELECT `id`, `idbook`, `fileName` FROM `data` WHERE `idbook`="+QString::number(idBook));
+    model->setQuery("SELECT `id`, `idbook`, `fileName`,`size` FROM `file` WHERE `idbook`="+QString::number(idBook));
+    return model;
+}
+
+QSqlQueryModel *SqlClient::findFiles(QList<int> idTags, QString author, QString theme)
+{
+    QSqlQuery query;
+    QStringList idBooks;
+    for (int i=0; i<idTags.count();++i)
+    {
+        query.exec("SELECT idbook FROM link WHERE idtag IN("+QString::number(idTags.at(i))+")");
+        while (query.next())
+            idBooks.append(query.value(0).toString());
+
+    }
+    QSqlQueryModel *model = new QSqlQueryModel();
+    QString str;
+    if(idTags.count()==0)
+        str="SELECT book.id, author, theme, rating FROM book LEFT JOIN link on book.id=link.idbook"
+                " WHERE author LIKE '%"+author+"%'  AND theme LIKE '%"+theme+"%'";
+    else
+        str="SELECT book.id, author, theme, rating FROM book LEFT JOIN link on book.id=link.idbook"
+                " WHERE author LIKE '%"+author+"%'  AND theme LIKE '%"+theme+"%' AND book.id IN ("+idBooks.join(",")+")";
+    model->setQuery(str);
     return model;
 }
 
@@ -46,20 +69,25 @@ void SqlClient::getFile(int id)
     {
         clearDir();
         currentBook=id;
-
-        QSqlQueryModel *model = new QSqlQueryModel();
-        model->setQuery("SELECT `data`, `fileName` FROM `data` WHERE `idbook`="+QString::number(id));
-        for(int i=0; i<model->rowCount();++i)
+        QSqlQuery query;
+        query.exec("SELECT `fileName`, `id` FROM `file` WHERE idbook="+QString::number(currentBook));
+        while(query.next())
         {
+            QString fileName=query.value(0).toString();
+            QSqlQueryModel *model = new QSqlQueryModel();
+            model->setQuery("SELECT  `data`, `part` FROM `partFile`"
+                            " WHERE `idFile`="+query.value(1).toString()+" ORDER BY `part`");
             QByteArray buf;
-            QString fileName=model->index(i,1).data().toString();
-            buf= model->index(i,0).data().toByteArray();
-            buf=qUncompress(buf);
-            QFile file;
-            file.setFileName("temp/"+fileName);
-            file.open(QIODevice::ReadWrite);
-            file.write(buf);
-            file.close();
+            for(int i=0; i<model->rowCount();++i)
+            {
+                buf+= model->index(i,0).data().toByteArray();
+            }
+                buf=qUncompress(buf);
+                QFile file;
+                file.setFileName("temp/"+fileName);
+                file.open(QIODevice::ReadWrite);
+                file.write(buf);
+                file.close();
         }
     }
 }
@@ -98,20 +126,41 @@ void SqlClient::addBook(book *_book)
     for(int i=0;i<_book->files.count();++i)
     {
         QByteArray buf;
+        QByteArray buf2;
         QFile file;
         file.setFileName(_book->files[i]);
         file.open(QIODevice::ReadOnly);
         buf=file.readAll();
-        buf=qCompress(buf,6);
+        float size=(float)buf.size()/1000;
+        buf=qCompress(buf,9);
         QFileInfo fileInfo;
         fileInfo.setFile(file);
         file.close();
-        query.prepare("INSERT INTO `eBook`.`data` (`idbook`, `fileName`, `data`)"
-                      "VALUES (:id, :name, :data)");
+        query.prepare("INSERT INTO `eBook`.`file` (`idbook`, `fileName`, `size`)"
+                      "VALUES (:id, :name, :size)");
         query.bindValue(":id",bookId);
         query.bindValue(":name",fileInfo.fileName());
-        query.bindValue(":data",buf);
+        query.bindValue(":size",size);
         query.exec();
+        int fileId=query.lastInsertId().toInt();
+        int lastSize=buf.size();
+        while (lastSize>10000000)
+            lastSize-=10000000;
+        int count=buf.size()/10000000;
+        count++;
+        for (int i=0; i<count;++i)
+        {
+            if (i==count-1)
+                buf2=buf.mid(i*10000000,lastSize);
+            else
+                buf2=buf.mid(i*10000000,10000000);
+            query.prepare("INSERT INTO `eBook`.`partFile` (`idFile`, `part`, `data`)"
+                          " VALUES (:id, :part , :data)");
+            query.bindValue(":id",fileId);
+            query.bindValue(":part",i);
+            query.bindValue(":data",buf2);
+            query.exec();
+        }
     }
 }
 
@@ -139,6 +188,6 @@ void SqlClient::openExplorer()
 void SqlClient::open(QString name)
 {
     QProcess sub;
-    sub.start("gnome-open temp/"+name);
+    sub.start("gnome-open \"temp/"+name+"\"");
     sub.waitForFinished(-1);
 }

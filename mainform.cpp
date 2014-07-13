@@ -11,10 +11,14 @@ MainForm::MainForm(QWidget *parent) :
     ui->setupUi(this);
 
 
-
     sql=new SqlClient();
     ui->bookView->setModel(sql->getBooks());
     ui->bookView->hideColumn(0);
+    _tags=sql->getTags();
+    for (int i=0; i<_tags.count();++i)
+    {
+        ui->ln_tags->addItem(_tags.value(i).second);
+    }
 
 }
 
@@ -42,12 +46,24 @@ void MainForm::on_bookView_clicked(const QModelIndex &index)
 void MainForm::accept()
 {
     qDebug()<<"add book";
+    ui->ln_tags->clear();
+    _tags=sql->getTags();
+    for (int i=0; i<_tags.count();++i)
+    {
+        ui->ln_tags->addItem(_tags.value(i).second);
+    }
     addBookForm->deleteLater();
 }
 
 void MainForm::cancelAddBook()
 {
     qDebug()<<"cancel";
+    ui->ln_tags->clear();
+    _tags=sql->getTags();
+    for (int i=0; i<_tags.count();++i)
+    {
+        ui->ln_tags->addItem(_tags.value(i).second);
+    }
     addBookForm->deleteLater();
 }
 
@@ -87,9 +103,23 @@ void MainForm::on_pushButton_4_clicked()
     int row= ui->fileView->currentIndex().row();
     if(row>-1)
     {
-
         QString name=ui->fileView->model()->index(row,2).data().toString();
         sql->getFile(ui->fileView->model()->index(row,1).data().toInt());
         sql->open(name);
     }
+}
+
+void MainForm::on_bt_find_clicked()
+{
+    QString tags=ui->ln_tags->getDisplayText();
+    QStringList tagList=tags.split(",");
+    QList<int> indexTag;
+    for (int i=0; i<tagList.count();++i)
+    {
+        for (int j=0; j<_tags.count();++j)
+            if(tagList.at(i)==_tags.at(j).second)
+                indexTag.append(_tags.at(j).first);
+    }
+    ui->bookView->model()->deleteLater();
+    ui->bookView->setModel(sql->findFiles(indexTag,ui->ln_author->text(),ui->ln_theme->text()));
 }

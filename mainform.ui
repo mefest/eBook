@@ -77,16 +77,16 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <widget class="QLineEdit" name="lineEdit"/>
+             <widget class="QLineEdit" name="ln_author"/>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_2"/>
+             <widget class="QLineEdit" name="ln_theme"/>
             </item>
             <item>
-             <widget class="MultiListWidget" name="comboBox"/>
+             <widget class="MultiListWidget" name="ln_tags"/>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_5">
+             <widget class="QPushButton" name="bt_find">
               <property name="text">
                <string>ok</string>
               </property>

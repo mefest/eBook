@@ -12,6 +12,7 @@ public:
     SqlClient();
     QSqlQueryModel* getBooks();
     QSqlQueryModel* getFiles(int idBook);
+    QSqlQueryModel* findFiles(QList<int> idTags, QString author, QString theme);
     void getFile(int id);
     QList< QPair<int,QString> > getTags();
     void addTag(QString name);
@@ -19,6 +20,7 @@ public:
     void clearDir();
     void openExplorer();
     void open(QString name);
+
     int currentBook;
 
 private:
